@@ -3,45 +3,33 @@ package main
 import (
     "fmt"
     "encoding/csv"
-    "log"
+    "flag"
+    "os"
     "strings"
-    "io"
-    "io/ioutil"
-    "strconv"
 )
 
 type Question struct {
     Formula string
-    Answer int
+    Answer string
 }
 
-func parse(s string) []Question {
-    var questions []Question
-    reader := csv.NewReader(strings.NewReader(s))
-    for {
-        record, err := reader.Read()
-        if err == io.EOF {
-            break
+func parseLines(lines [][]string) []Question {
+    questions := make([]Question, len(lines))
+    for i, line := range lines {
+        questions[i] = Question{
+            Formula: line[0],
+            Answer: strings.TrimSpace(line[1]),
         }
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        answer, error := strconv.Atoi(record[1])
-        if error != nil {
-            panic(error)
-        }
-        questions = append(questions, Question{record[0], answer})
     }
     return questions
 }
 
 func ask(questions []Question) int {
     var corrects int
-    var answer int
+    var answer string
     for _, question := range questions {
         fmt.Println(question.Formula)
-        fmt.Scanf("%d", &answer)
+        fmt.Scanf("%s", &answer)
         if answer == question.Answer {
             corrects++
         }
@@ -49,13 +37,27 @@ func ask(questions []Question) int {
     return corrects
 }
 
+func exit(message string) {
+    fmt.Printf(message)
+    os.Exit(1)
+}
+
 func main() {
-    file, err := ioutil.ReadFile("./hoge.csv")
+    csvFilename := flag.String("csv", "hoge.csv", "a csv file in the format of 'question,answer'")
+    flag.Parse()
+
+    file, err := os.Open(*csvFilename)
     if err != nil {
-        panic(err)
+        exit(fmt.Sprintf("Failed to open the CSV file: %s\n", *csvFilename))
     }
-    
-    questions := parse(string(file))
+
+    reader := csv.NewReader(file)
+    lines, err := reader.ReadAll()
+    if err != nil {
+        exit("Failed to parse the provided CSV file.")
+    }
+
+    questions := parseLines(lines)
     corrects := ask(questions)
     fmt.Println(corrects)
 }
