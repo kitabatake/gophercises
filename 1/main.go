@@ -6,6 +6,7 @@ import (
     "log"
     "strings"
     "io"
+    "io/ioutil"
     "strconv"
 )
 
@@ -49,10 +50,12 @@ func ask(questions []Question) int {
 }
 
 func main() {
-    in := `1 + 3,4
-10 + 1,11
-`
-    questions := parse(in)
+    file, err := ioutil.ReadFile("./hoge.csv")
+    if err != nil {
+        panic(err)
+    }
+    
+    questions := parse(string(file))
     corrects := ask(questions)
     fmt.Println(corrects)
 }
