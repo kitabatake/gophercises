@@ -1,8 +1,9 @@
 package main
 
 import (
-    "fmt"
+    // "fmt"
     "log"
+    "net/http"
 )
 
 func main () {
@@ -12,11 +13,9 @@ func main () {
         log.Fatal(err)
     }
 
-    fmt.Println(stories["intro"].Title)
-
-    // Adjust to struct
-
     // Make Http handler
-
+    http.Handle("/", makeHandler(stories))
+    
     // Start server
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }

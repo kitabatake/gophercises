@@ -3,6 +3,8 @@ package main
 import (
     "io/ioutil"
     "encoding/json"
+    "net/http"
+    "fmt"
 )
 
 type Story struct {
@@ -30,4 +32,10 @@ func parseStoriesFromFile (filepath string) (map[string]Story, error) {
     }
 
     return stories, nil
+}
+
+func makeHandler (stories map[string]Story) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, "Hello, %s", r.URL.Path)
+    }
 }
