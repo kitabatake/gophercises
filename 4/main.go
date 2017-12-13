@@ -3,7 +3,7 @@ package main
 import (
 	"golang.org/x/net/html"
 	"strings"
-	)
+)
 
 type Link struct {
 	Href string
@@ -16,24 +16,30 @@ func parseHTML(htmlText string) ([]Link, error) {
 		return nil, err
 	}
 
+	anodes := extractANodes(node)
 	var links []Link
-	parseNode(node, &links)
+	for _, anode := range anodes {
+		links = append(links, buildLink(anode))
+	}
 	return links, nil
 }
 
-func parseNode(node *html.Node, links *[]Link) {
+func buildLink(node *html.Node) Link {
+	var link Link
+	link.Href = extractHref(node.Attr)
+	link.Text = strings.Join(extractTexts(node), " ")
+	return link
+}
+
+func extractANodes(node *html.Node) []*html.Node {
 	if node.Type == html.ElementNode && node.Data == "a" {
-		var texts []string
-		extractTexts(node, &texts)
-		*links = append(*links, Link {
-			Href: extractHref(node.Attr),
-			Text: strings.Join(texts, " "),
-		})
-	} else {
-		for c := node.FirstChild; c != nil; c = c.NextSibling {
-			parseNode(c, links)
-		}
+		return []*html.Node {node}
 	}
+	var ret []*html.Node
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		ret = append(ret, extractANodes(c)...)
+	}
+	return ret
 }
 
 func extractHref(attributes []html.Attribute) string {
@@ -46,11 +52,13 @@ func extractHref(attributes []html.Attribute) string {
 	return href
 }
 
-func extractTexts(node *html.Node, texts *[]string) {
+func extractTexts(node *html.Node) []string {
 	if node.Type == html.TextNode {
-		*texts = append(*texts, node.Data)
+		return []string {node.Data}
 	}
+	var ret []string
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		extractTexts(c, texts)
+		ret = append(ret, extractTexts(c)...)
 	}
+	return ret
 }

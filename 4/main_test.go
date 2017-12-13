@@ -11,5 +11,5 @@ func TestParseHTML(t *testing.T) {
 		t.Fatalf("failed test %#v", err)
 	}
 
-	fmt.Println(result)
+	fmt.Printf("%+v\n", result)
 }
